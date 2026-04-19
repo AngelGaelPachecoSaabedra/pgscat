@@ -1,0 +1,43 @@
+# ── Private modules (never publish) ──────────────────────────────────────────
+annotator/
+pipeline_scripts/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+*.secret
+*_password
+*_password.txt
+secrets/
+.secrets/
+
+# ── Runtime / work directories ────────────────────────────────────────────────
+work/
+/work/
+*.cache
+*.log
+
+# ── Editors / OS ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Claude Code internal ──────────────────────────────────────────────────────
+.claude/
+
+# ── Raw/unprocessed data ──────────────────────────────────────────────────────
+resources/clinical_genes/raw/

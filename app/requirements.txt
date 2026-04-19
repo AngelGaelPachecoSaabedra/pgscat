@@ -1,0 +1,10 @@
+bottle>=0.12.25
+duckdb>=0.10.3
+gunicorn>=21.2.0
+requests>=2.31.0
+psycopg2-binary>=2.9.9
+pyarrow>=15.0.0
+
+# pgscat (heavy: numpy, pandas, zarr) — installed separately in Containerfile:
+#   pip install "pgscat @ git+https://github.com/fenandosr/pgscat.git"
+# Set APP_PGSCAT_MODE=cli if you want to avoid these deps inside the container.

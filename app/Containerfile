@@ -1,0 +1,102 @@
+FROM python:3.12-slim
+
+LABEL maintainer="PGS Dashboard Contributors"
+LABEL description="PGS/PRS Dashboard – Bottle + DuckDB + PostgreSQL + pgscat"
+LABEL org.opencontainers.image.source="https://github.com/your-org/pgs-dashboard"
+
+# ── System deps ───────────────────────────────────────────────────────────────
+# git: install pgscat from GitHub
+# libpq-dev: psycopg2 C bindings (psycopg2-binary bundles them, libpq not needed)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# ── Non-root user ─────────────────────────────────────────────────────────────
+RUN useradd -m -u 1000 -s /bin/bash appuser
+
+# ── Python deps (layered for cache efficiency) ────────────────────────────────
+# Layer 1: lightweight runtime deps (fast to rebuild)
+# Includes: duckdb (fast parquet reads), pyarrow (parquet I/O fallback)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Validate parquet-critical deps are importable — fail the build if missing
+RUN python -c "import duckdb, pyarrow; print('duckdb', duckdb.__version__, '| pyarrow', pyarrow.__version__, '| OK')"
+
+# Layer 2: pgscat + heavy transitive deps (numpy, pandas, zarr)
+#   Comment this out and set APP_PGSCAT_MODE=cli to avoid heavy deps.
+RUN pip install --no-cache-dir \
+    "pgscat @ git+https://github.com/fenandosr/pgscat.git"
+
+# ── Application source ────────────────────────────────────────────────────────
+COPY resources/ ./resources/
+COPY src/ ./src/
+COPY sql/ ./sql/
+
+# ── Directories ───────────────────────────────────────────────────────────────
+RUN mkdir -p /work/cache && chown -R appuser:appuser /work /app
+
+USER appuser
+
+EXPOSE 8080
+
+# ── Environment defaults ──────────────────────────────────────────────────────
+ENV APP_DATA_DIR=/data \
+    APP_WORK_DIR=/work \
+    APP_SCRIPTS_DIR=/scripts \
+    APP_PGSCAT_MODE=python \
+    APP_PGSCAT_BIN=pgscat \
+    APP_PGSCAT_TIMEOUT=30 \
+    APP_REMOTE_ENABLED=true \
+    APP_REMOTE_CACHE_TTL=86400 \
+    APP_DB_HOST=postgres \
+    APP_DB_PORT=5432 \
+    APP_DB_NAME=pgs_dashboard \
+    APP_DB_USER=pgs_user \
+    APP_STATS_CACHE_TTL=3600 \
+    APP_TRUSTED_PROXY=true \
+    APP_HOST=0.0.0.0 \
+    APP_PORT=8080
+
+# ── Gunicorn production settings ──────────────────────────────────────────────
+# workers=4: CPU-bound via DuckDB → 2×CPU cores is safe; adjust to your host.
+# timeout=120: DuckDB on cold CephFS can take ~20s for first read; 120s is safe.
+# worker-class=sync: Bottle is synchronous; gthread/gevent would need changes.
+# access-logfile=-: logs to stdout for container log capture.
+CMD ["gunicorn", \
+     "--bind", "0.0.0.0:8080", \
+     "--workers", "4", \
+     "--worker-class", "sync", \
+     "--timeout", "120", \
+     "--graceful-timeout", "30", \
+     "--keep-alive", "5", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--log-level", "info", \
+     "--chdir", "/app/src", \
+     "app:app"]
+
+# ════════════════════════════════════════════════════════════════════════════
+# Manual build & run example
+# ════════════════════════════════════════════════════════════════════════════
+#
+# Build:
+#   podman build -t pgs-dashboard:1.1 -f Containerfile .
+#
+# Run (with PostgreSQL):
+#   podman run --rm -p 8080:8080 \
+#     -v /path/to/scores:/data:ro \
+#     -v /tmp/pgs-work:/work \
+#     -e APP_DB_HOST=<db-host> \
+#     -e APP_DB_PASSWORD_FILE=/run/secrets/db_password \
+#     -v /path/to/db_password_file:/run/secrets/db_password:ro \
+#     pgs-dashboard:latest
+#
+# Run (filesystem only, no DB):
+#   podman run --rm -p 8080:8080 \
+#     -v /path/to/scores:/data:ro \
+#     -v /tmp/pgs-work:/work \
+#     pgs-dashboard:latest

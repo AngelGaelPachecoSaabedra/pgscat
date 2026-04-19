@@ -1,0 +1,9 @@
+{
+  "pgs_id": "PGS000001",
+  "samples_total": 10,
+  "chromosomes_processed": [1, 2, 3, 4, 5],
+  "aggregation_method": "sum",
+  "pipeline_version": "1.0.0",
+  "created_at": "2026-01-01T00:00:00Z",
+  "note": "DUMMY DATA — generated for testing only, not real cohort scores"
+}

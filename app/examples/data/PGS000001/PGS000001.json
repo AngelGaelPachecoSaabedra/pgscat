@@ -1,0 +1,19 @@
+{
+  "id": "PGS000001",
+  "name": "PGS000001",
+  "trait_reported": "Coronary Artery Disease",
+  "trait_efo": ["EFO_0001645"],
+  "variants_number": 182,
+  "weight_type": "log(OR)",
+  "ancestry_distribution": {
+    "eval": {"EUR": 100.0}
+  },
+  "publication": {
+    "title": "Example publication title",
+    "doi": "10.xxxx/example",
+    "PMID": "00000000",
+    "journal": "Example Journal",
+    "date_publication": "2020-01-01"
+  },
+  "license": "No restrictions on use"
+}

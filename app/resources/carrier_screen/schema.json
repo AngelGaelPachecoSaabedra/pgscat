@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Carrier Screen Gene List",
+  "description": "Schema for carrier_genes.json — the Infinium GDA Carrier Screen gene list",
+  "type": "object",
+  "required": ["genes"],
+  "properties": {
+    "source_note": {
+      "type": "string",
+      "description": "Free-text description of how this list was generated (e.g. 'Extracted from GDA manifest v1.0 on 2026-04-13')"
+    },
+    "n_genes": {
+      "type": "integer",
+      "description": "Total number of unique gene symbols in this file"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when this file was generated"
+    },
+    "manifest_version": {
+      "type": "string",
+      "description": "Version of the Illumina GDA manifest used (e.g. 'Infinium_GlobalDiversity_Array-8_v1.0')"
+    },
+    "genes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gene_symbol"],
+        "properties": {
+          "gene_symbol": {
+            "type": "string",
+            "description": "HGNC gene symbol (uppercase, e.g. CFTR)"
+          },
+          "n_variants_in_manifest": {
+            "type": "integer",
+            "description": "Number of variants on the array for this gene"
+          },
+          "gene_id": {
+            "type": "string",
+            "description": "Ensembl gene ID (e.g. ENSG00000001626)"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of associated conditions (e.g. ['Cystic fibrosis'])"
+          },
+          "inheritance": {
+            "type": "string",
+            "enum": ["AR", "XL", "AD", "XD", "Unknown"],
+            "description": "Inheritance pattern: AR=autosomal recessive, XL=X-linked"
+          },
+          "acmg_tier": {
+            "type": "string",
+            "enum": ["Tier 1", "Tier 2", "Tier 3", ""],
+            "description": "ACMG carrier screening tier (Tier 1 = highest priority)"
+          },
+          "omim_id": {
+            "type": "string",
+            "description": "OMIM gene MIM number (e.g. '602421')"
+          },
+          "chromosome": {
+            "type": "string",
+            "description": "Chromosome (e.g. '7' for CFTR)"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "source_note": "Extracted from Illumina Infinium GDA manifest v1.0 on 2026-04-13",
+      "n_genes": 602,
+      "generated_at": "2026-04-13T00:00:00Z",
+      "manifest_version": "Infinium_GlobalDiversity_Array-8_v1.0",
+      "genes": [
+        {
+          "gene_symbol": "CFTR",
+          "n_variants_in_manifest": 42,
+          "conditions": ["Cystic fibrosis"],
+          "inheritance": "AR",
+          "acmg_tier": "Tier 1",
+          "chromosome": "7"
+        },
+        {
+          "gene_symbol": "SMN1",
+          "n_variants_in_manifest": 12,
+          "conditions": ["Spinal muscular atrophy"],
+          "inheritance": "AR",
+          "acmg_tier": "Tier 1",
+          "chromosome": "5"
+        }
+      ]
+    }
+  ]
+}
